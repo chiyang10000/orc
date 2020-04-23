@@ -79,8 +79,8 @@ else ()
 endif ()
 
 include_directories (SYSTEM ${SNAPPY_INCLUDE_DIR})
-add_library (snappy STATIC IMPORTED)
-set_target_properties (snappy PROPERTIES IMPORTED_LOCATION ${SNAPPY_STATIC_LIB})
+add_library (snappy SHARED IMPORTED)
+set_target_properties (snappy PROPERTIES IMPORTED_LOCATION ${SNAPPY_LIBRARIES})
 
 if (SNAPPY_VENDORED)
   add_dependencies (snappy snappy_ep)
@@ -327,11 +327,11 @@ endif ()
 
 include_directories (SYSTEM ${PROTOBUF_INCLUDE_DIR})
 
-add_library (protobuf STATIC IMPORTED)
-set_target_properties (protobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_STATIC_LIB})
+add_library (protobuf SHARED IMPORTED)
+set_target_properties (protobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_LIBRARY})
 
-add_library (protoc STATIC IMPORTED)
-set_target_properties (protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_STATIC_LIB})
+add_library (protoc SHARED IMPORTED)
+set_target_properties (protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_LIBRARY})
 
 if (PROTOBUF_VENDORED)
   add_dependencies (protoc protobuf_ep)
@@ -357,12 +357,12 @@ if(BUILD_LIBHDFSPP)
       set (LIBHDFSPP_INCLUDE_DIR "${LIBHDFSPP_PREFIX}/include")
       set (LIBHDFSPP_STATIC_LIB_NAME hdfspp_static)
       set (LIBHDFSPP_STATIC_LIB "${LIBHDFSPP_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBHDFSPP_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set (LIBHDFSPP_SRC_URL "${CMAKE_SOURCE_DIR}/c++/libs/libhdfspp/libhdfspp.tar.gz")
+      set (LIBHDFSPP_SRC_URL "${CMAKE_CURRENT_SOURCE_DIR}/c++/libs/libhdfspp/libhdfspp.tar.gz")
       set (LIBHDFSPP_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                                 -DCMAKE_INSTALL_PREFIX=${LIBHDFSPP_PREFIX}
                                 -DPROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIR}
-                                -DPROTOBUF_LIBRARY=${PROTOBUF_STATIC_LIB}
-                                -DPROTOBUF_PROTOC_LIBRARY=${PROTOC_STATIC_LIB}
+                                -DPROTOBUF_LIBRARY=${PROTOBUF_LIBRARY}
+                                -DPROTOBUF_PROTOC_LIBRARY=${PROTOC_LIBRARY}
                                 -DPROTOBUF_PROTOC_EXECUTABLE=${PROTOBUF_EXECUTABLE}
                                 -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
                                 -DCMAKE_C_FLAGS=${EP_C_FLAGS}
