@@ -143,6 +143,16 @@ namespace orc {
                                       const Type& type,
                                       OutputStream* stream,
                                       const WriterOptions& options);
+
+
+  ORC_UNIQUE_PTR<Writer> createWriter(
+                                      const Type& type,
+                                      OutputStream* stream,
+                                      const WriterOptions& options,
+                                      const std::string &postScript,
+                                      const std::string &footer,
+                                      const std::string &metadata
+                                      );
 }
 
 #endif

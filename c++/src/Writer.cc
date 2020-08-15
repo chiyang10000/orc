@@ -259,6 +259,45 @@ namespace orc {
                const Type& type,
                OutputStream* stream,
                const WriterOptions& options);
+    WriterImpl(
+               const Type& type,
+               OutputStream* stream,
+               const WriterOptions& options,
+               const std::string& postScript,
+               const std::string & footer,
+               const std::string& metadata
+               ): outStream(stream), options(options),type(type) {
+      this->postScript.ParseFromString(postScript);
+      this->fileFooter.ParseFromString(footer);
+      this->metadata.ParseFromString(metadata);
+      this->fileFooter.clear_types();
+
+      streamsFactory = createStreamsFactory(options, outStream);
+      columnWriter = buildWriter(type, *streamsFactory, options);
+      stripeRows = totalRows = indexRows = 0;
+
+      // compression stream for stripe footer, file footer and metadata
+      compressionStream = createCompressor(
+                                    options.getCompression(),
+                                    outStream,
+                                    options.getCompressionStrategy(),
+                                    1 * 1024 * 1024, // buffer capacity: 1M
+                                    options.getCompressionBlockSize(),
+                                    *options.getMemoryPool());
+
+      // uncompressed stream for post script
+      bufferedStream.reset(new BufferedOutputStream(
+                                              *options.getMemoryPool(),
+                                              outStream,
+                                              1024, // buffer capacity: 1024 bytes
+                                              options.getCompressionBlockSize()));
+
+      currentOffset = stream->getLength();
+      totalRows = fileFooter.numberofrows();
+      uint32_t index = 0;
+      buildFooterType(this->type, this->fileFooter, index);
+      initStripe();
+    }
 
     std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size)
                                                             const override;
@@ -499,11 +538,17 @@ namespace orc {
     fileFooter.set_contentlength(currentOffset - fileFooter.headerlength());
     fileFooter.set_numberofrows(totalRows);
 
+    if (fileFooter.statistics_size() > 0) {
+      // XXX(chiyang): Currently ORC APPEND WRITE is unable to produce correct
+      // file statistics. So keep statistics non-existed rather than incorrect.
+      fileFooter.clear_statistics();
+    } else { // Only write file statistics for totally new file.
     // update file statistics
     std::vector<proto::ColumnStatistics> colStats;
     columnWriter->getFileStatistics(colStats);
     for (uint32_t i = 0; i != colStats.size(); ++i) {
       *fileFooter.add_statistics() = colStats[i];
+    }
     }
 
     if (!fileFooter.SerializeToZeroCopyStream(compressionStream.get())) {
@@ -638,6 +683,24 @@ namespace orc {
                                             type,
                                             stream,
                                             options));
+  }
+  std::unique_ptr<Writer> createWriter(
+                                       const Type& type,
+                                       OutputStream* stream,
+                                       const WriterOptions& options,
+                                       const std::string &postScript,
+                                       const std::string &footer,
+                                       const std::string &metadata
+                                       ) {
+    return std::unique_ptr<Writer>(
+                                   new WriterImpl(
+                                            type,
+                                            stream,
+                                            options,
+                                            (postScript),
+                                            (footer),
+                                            (metadata)
+                                            ));
   }
 
 }
