@@ -1014,6 +1014,75 @@ DIAGNOSTIC_POP
 
     return true;
   }
+  class Lz4CompressionStream: public BlockCompressionStream {
+  public:
+    Lz4CompressionStream(OutputStream * outStream,
+                          int compressionLevel,
+                          uint64_t capacity,
+                          uint64_t blockSize,
+                          MemoryPool& pool) : BlockCompressionStream(outStream,
+                                              compressionLevel,
+                                              capacity,
+                                              blockSize,
+                                              pool) {}
+
+    virtual std::string getName() const override {
+      return "Lz4CompressionStream";
+    }
+
+  protected:
+    virtual uint64_t doBlockCompression() override {
+      const char *src = reinterpret_cast<const char*>(rawInputBuffer.data());
+      uint64_t srcSize = bufferSize;
+      char *dest = reinterpret_cast<char*>(compressorBuffer.data());
+      uint64_t destSize = compressorBuffer.size();
+      assert(src != nullptr && srcSize > 0 && dest != nullptr && destSize > 0);
+      assert(destSize >= LZ4_compressBound(srcSize));
+      int res = LZ4_compress_default(src, dest, srcSize, destSize);
+      if (res == 0) {
+        throw std::runtime_error("Error while calling LZ4_compress_default() for lz4.");
+      }
+      return res;
+    }
+
+    virtual uint64_t estimateMaxCompressionSize() override {
+      return LZ4_compressBound(static_cast<size_t>(bufferSize));
+    }
+  };
+
+  class SnappyCompressionStream: public BlockCompressionStream {
+  public:
+    SnappyCompressionStream(OutputStream * outStream,
+                          int compressionLevel,
+                          uint64_t capacity,
+                          uint64_t blockSize,
+                          MemoryPool& pool) : BlockCompressionStream(outStream,
+                                              compressionLevel,
+                                              capacity,
+                                              blockSize,
+                                              pool) {}
+
+    virtual std::string getName() const override {
+      return "SnappyCompressionStream";
+    }
+
+  protected:
+    virtual uint64_t doBlockCompression() override {
+      const char *src = reinterpret_cast<const char*>(rawInputBuffer.data());
+      uint64_t srcSize = bufferSize;
+      char *dest = reinterpret_cast<char*>(compressorBuffer.data());
+      uint64_t destSize = compressorBuffer.size();
+      assert(src != nullptr && srcSize > 0 && dest != nullptr && destSize > 0);
+      assert(destSize >= snappy::MaxCompressedLength(srcSize));
+      size_t res;
+      snappy::RawCompress(src, srcSize, dest, &res);
+      return res;
+    }
+
+    virtual uint64_t estimateMaxCompressionSize() override {
+      return snappy::MaxCompressedLength(static_cast<size_t>(bufferSize));
+    }
+  };
 
   /**
    * ZSTD block compression
@@ -1119,8 +1188,14 @@ DIAGNOSTIC_POP
           outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
     case CompressionKind_SNAPPY:
-    case CompressionKind_LZO:
+      return std::unique_ptr<BufferedOutputStream>
+        (new SnappyCompressionStream(
+                outStream, 0, bufferCapacity, compressionBlockSize, pool));
     case CompressionKind_LZ4:
+      return std::unique_ptr<BufferedOutputStream>
+        (new Lz4CompressionStream(
+                outStream, 0, bufferCapacity, compressionBlockSize, pool));
+    case CompressionKind_LZO:
     default:
       throw NotImplementedYet("compression codec");
     }
