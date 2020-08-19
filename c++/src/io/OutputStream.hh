@@ -46,6 +46,11 @@ namespace orc {
     std::unique_ptr<DataBuffer<char> > dataBuffer;
     uint64_t blockSize;
 
+  protected:
+    void updUncompressedFlushToStreamSize(int64_t size) {
+      outputStream->uncompressedFlushToStreamSize += size;
+    }
+
   public:
     BufferedOutputStream(MemoryPool& pool,
                       OutputStream * outStream,

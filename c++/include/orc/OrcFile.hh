@@ -100,6 +100,8 @@ namespace orc {
      * Close the stream and flush any pending data to the disk.
      */
     virtual void close() = 0;
+
+    uint64_t uncompressedFlushToStreamSize = 0;
   };
 
   /**

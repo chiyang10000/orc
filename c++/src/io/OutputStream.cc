@@ -94,6 +94,7 @@ namespace orc {
     uint64_t dataSize = dataBuffer->size();
     outputStream->write(dataBuffer->data(), dataSize);
     dataBuffer->resize(0);
+    updUncompressedFlushToStreamSize(dataSize);
     return dataSize;
   }
 

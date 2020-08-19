@@ -117,6 +117,10 @@ namespace orc {
     }
     BufferedOutputStream::BackUp(outputSize - outputPosition);
     bufferSize = outputSize = outputPosition = 0;
+
+    // offset the extra increment in following flush
+    updUncompressedFlushToStreamSize(-ByteCount());
+
     return BufferedOutputStream::flush();
   }
 
@@ -176,6 +180,8 @@ namespace orc {
   bool CompressionStream::Next(void** data, int*size) {
     if (bufferSize != 0) {
       ensureHeader();
+
+      updUncompressedFlushToStreamSize(bufferSize);
 
       uint64_t totalCompressedSize = doStreamingCompression();
 
@@ -964,6 +970,8 @@ DIAGNOSTIC_POP
   bool BlockCompressionStream::Next(void** data, int*size) {
     if (bufferSize != 0) {
       ensureHeader();
+
+      updUncompressedFlushToStreamSize(bufferSize);
 
       // perform compression
       size_t totalCompressedSize = doBlockCompression();
