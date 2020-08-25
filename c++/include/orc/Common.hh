@@ -218,6 +218,9 @@ namespace orc {
   // Specialization for Decimal
   template <>
   inline bool compare(Decimal val1, Decimal val2) {
+    if (val1.scale == val2.scale)
+    return (val1.value < val2.value);
+
     // compare integral parts
     Int128 integral1 = scaleDownInt128ByPowerOfTen(val1.value,
                                                    val1.scale);
