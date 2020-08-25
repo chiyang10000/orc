@@ -591,6 +591,10 @@ namespace orc {
       protoType.set_kind(proto::Type_Kind_DECIMAL);
       break;
     }
+    case TIME: {
+      protoType.set_kind(proto::Type_Kind_TIME);
+      break;
+    }
     case DATE: {
       protoType.set_kind(proto::Type_Kind_DATE);
       break;

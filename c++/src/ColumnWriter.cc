@@ -2900,6 +2900,7 @@ namespace orc {
                                  type,
                                  factory,
                                  options));
+      case TIME:
       case INT:
       case LONG:
       case SHORT:

@@ -1754,6 +1754,7 @@ namespace orc {
   std::unique_ptr<ColumnReader> buildReader(const Type& type,
                                             StripeStreams& stripe) {
     switch (static_cast<int64_t>(type.getKind())) {
+    case TIME:
     case DATE:
     case INT:
     case LONG:

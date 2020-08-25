@@ -43,7 +43,8 @@ namespace orc {
     DECIMAL = 14,
     DATE = 15,
     VARCHAR = 16,
-    CHAR = 17
+    CHAR = 17,
+    TIME = 101,
   };
 
   class Type {

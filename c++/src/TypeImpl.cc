@@ -210,6 +210,8 @@ namespace orc {
       result << "decimal(" << precision << "," << scale << ")";
       return result.str();
     }
+    case TIME:
+      return "time";
     case DATE:
       return "date";
     case VARCHAR: {
@@ -238,6 +240,7 @@ namespace orc {
     case INT:
     case LONG:
     case DATE:
+    case TIME:
       return std::unique_ptr<ColumnVectorBatch>
         (new LongVectorBatch(capacity, memoryPool));
 
@@ -374,6 +377,10 @@ namespace orc {
     case proto::Type_Kind_DATE:
       return std::unique_ptr<Type>
         (new TypeImpl(static_cast<TypeKind>(type.kind())));
+
+    case proto::Type_Kind_TIME:
+      return std::unique_ptr<Type>
+        (new TypeImpl(static_cast<TypeKind>(proto::Type_Kind_LONG)));
 
     case proto::Type_Kind_CHAR:
     case proto::Type_Kind_VARCHAR:

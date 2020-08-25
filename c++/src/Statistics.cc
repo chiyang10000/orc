@@ -379,6 +379,7 @@ namespace orc {
       case BOOLEAN:
         return std::unique_ptr<MutableColumnStatistics>(
           new BooleanColumnStatisticsImpl());
+      case TIME:
       case BYTE:
       case INT:
       case LONG:
